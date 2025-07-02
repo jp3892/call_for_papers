@@ -1,0 +1,20 @@
+0\tNA
+1\tNA
+2\tPoetry 
+3\tPrint and Visual Studies
+4\t(Transatlantic) Travel
+5\tNA
+6\tNA
+7\tAnimals and Nature
+8\tIndustrialization
+9\tNon-English
+10\tNA
+11\tWomen Writers
+12\tNA
+13\tDetective Fiction
+14\tUrban Lives
+15\tIllness, Body, and Disability Studies
+16\tMonsters
+17\tNA
+18\tPedagogy
+19\tNA

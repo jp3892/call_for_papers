@@ -1,0 +1,20 @@
+0	Pedagogy
+1	Performance
+2	Popular Culture
+3	NA
+4	Non-English
+5	Gender Studies
+6	CFP Discourse
+7	Posthuman
+8	NA
+9	New Media
+10	Science
+11	NA
+12	Gaming
+13	Digital Humanities
+14	NA
+15	NA
+16	NA
+17	Literature
+18	Data, AI
+19	Victorian

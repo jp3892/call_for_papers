@@ -1,0 +1,20 @@
+0\tPower
+1\tUrban Spaces
+2\tNA
+3\tPostcolonial
+4\tTechnology and Media
+5\tPoetry
+6\tCfP Discourse
+7\tNon-English
+8\tTheatre
+9\tEcocriticism
+10\tPoststructuralism
+11\tAffect
+12\tPedagogy
+13\tGender Studies
+14\tNA
+15\tNA
+16\tMemory and Trauma
+17\tFilm and TV
+18\tNA
+19\tNA
