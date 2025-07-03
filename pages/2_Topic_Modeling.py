@@ -199,7 +199,7 @@ if selected_topic_label:
         st.markdown(f"#### 📚 Field: *{cat}*, Topic {tid}")
         st.write("Top words:", ", ".join(words))
 
-        subset_df = full_cfp_df[full_cfp_df["categories"].str.contains(fr"\\b{re.escape(cat)}\\b", case=False, na=False)].copy()
+        subset_df = full_cfp_df[full_cfp_df["categories"].str.contains(fr"\b{re.escape(cat)}\b", case=False, na=False)].copy()
         subset_df = subset_df.reset_index(drop=True)
 
         model_dir = f"topic_model_output_slimmed/cfps20_{cat}"
