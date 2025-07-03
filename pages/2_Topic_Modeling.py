@@ -72,12 +72,22 @@ if selected_category:
     cfp_df = full_cfp_df.copy()
     st.write("Selected category:", selected_category)
     st.write("Sample categories in data:", cfp_df['categories'].dropna().unique()[:10])
+    def normalize_tags(tag_string):
+        if pd.isna(tag_string):
+            return []
+        return [tag.strip().lower().replace(" ", "_") for tag in tag_string.split(",")]
 
-    cfp_df = cfp_df[cfp_df['categories'].str.lower().str.contains(selected_category.lower(), na=False)]
+    cfp_df['category_tags'] = cfp_df['categories'].apply(normalize_tags)
+
+    selected_category_normalized = selected_category.lower()
+
+    cfp_df = cfp_df[cfp_df['category_tags'].apply(lambda tags: selected_category_normalized in tags)]
+
 
 
     model_dir = f"topic_model_output_slimmed/cfps20_{selected_category}"
     topic_dist_path = os.path.join(model_dir, "mallet.topic_distributions.20")
+    training_ids_path = os.path.join(model_dir, "training_ids.txt")
 
     try:
         topic_distributions = load_topic_distributions(topic_dist_path)
@@ -87,10 +97,13 @@ if selected_category:
 
     topic_df_values = pd.DataFrame(topic_distributions)
     topic_df_values.columns = [f"Topic {i}" for i in range(len(topic_df_values.columns))]
+    with open (training_ids_path) as f:
+        ids = [line.strip() for line in f]
+    topic_df_values["unique_id"] = ids
     st.write("cfp_df rows:", len(cfp_df))
     st.write("topic_df_values rows:", len(topic_df_values))
 
-    cfp_df = pd.concat([cfp_df, topic_df_values], axis=1)
+    cfp_df = pd.merge(cfp_df, topic_df_values, on="unique_id", how="inner")
 
 
     cfp_df['month'] = cfp_df['date'].dt.to_period("M").dt.to_timestamp()
@@ -178,6 +191,7 @@ if selected_category:
         st.pyplot(fig_wc)
     except FileNotFoundError:
         st.error(f"Could not find word weights at: {word_weights_path}")
+    print(topic_df_values.columns)
 
 # === Cross-category Topic Exploration ===
 if selected_topic_label:
