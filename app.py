@@ -8,3 +8,5 @@ st.set_page_config(
 
 st.title("Humanities Call-for-Papers Dataset Explorer")
 st.write("Use the sidebar to explore the different sections of the project.")
+
+st.warning("This app is currently in **testing mode**. Please do not share the link. Features may change or break.")
