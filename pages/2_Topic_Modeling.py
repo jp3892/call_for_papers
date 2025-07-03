@@ -83,7 +83,11 @@ if selected_category:
 
     topic_df_values = pd.DataFrame(topic_distributions)
     topic_df_values.columns = [f"Topic {i}" for i in range(len(topic_df_values.columns))]
+    st.write("cfp_df rows:", len(cfp_df))
+    st.write("topic_df_values rows:", len(topic_df_values))
+
     cfp_df = pd.concat([cfp_df, topic_df_values], axis=1)
+
 
     cfp_df['month'] = cfp_df['date'].dt.to_period("M").dt.to_timestamp()
     topic_col = f"Topic {topic_id}"
