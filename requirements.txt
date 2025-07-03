@@ -1,0 +1,7 @@
+streamlit
+pandas
+matplotlib
+plotly
+nltk
+wordcloud
+little-mallet-wrapper
