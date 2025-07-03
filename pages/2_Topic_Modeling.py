@@ -70,7 +70,11 @@ if selected_category:
     st.write("Top words:", ", ".join(top_words))
 
     cfp_df = full_cfp_df.copy()
-    cfp_df = cfp_df[cfp_df['categories'].str.contains(fr'\\b{re.escape(selected_category)}\\b', case=False, na=False)].reset_index(drop=True)
+    st.write("Selected category:", selected_category)
+    st.write("Sample categories in data:", cfp_df['categories'].dropna().unique()[:10])
+
+    cfp_df = cfp_df[cfp_df['categories'].str.lower().str.contains(selected_category.lower(), na=False)]
+
 
     model_dir = f"topic_model_output_slimmed/cfps20_{selected_category}"
     topic_dist_path = os.path.join(model_dir, "mallet.topic_distributions.20")
