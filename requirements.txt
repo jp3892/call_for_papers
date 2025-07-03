@@ -5,6 +5,4 @@ plotly
 nltk
 wordcloud
 little-mallet-wrapper
-re
-json
 scipy
