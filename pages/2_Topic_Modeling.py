@@ -24,6 +24,8 @@ def load_all_cfps(path):
     return df.reset_index(drop=True)
 
 full_cfp_df = load_all_cfps(CFP_DATA_PATH)
+def short_title_list(titles):
+    return "<br>".join(titles[:5]) + ("<br>..." if len(titles) > 5 else "")
 
 # === Detect available topic models ===
 topic_files = [f for f in os.listdir(BASE_PATH) if f.startswith("topics_") and f.endswith(".json")]
@@ -70,8 +72,7 @@ if selected_category:
     st.write("Top words:", ", ".join(top_words))
 
     cfp_df = full_cfp_df.copy()
-    st.write("Selected category:", selected_category)
-    st.write("Sample categories in data:", cfp_df['categories'].dropna().unique()[:10])
+    
     def normalize_tags(tag_string):
         if pd.isna(tag_string):
             return []
@@ -100,8 +101,7 @@ if selected_category:
     with open (training_ids_path) as f:
         ids = [line.strip() for line in f]
     topic_df_values["unique_id"] = ids
-    st.write("cfp_df rows:", len(cfp_df))
-    st.write("topic_df_values rows:", len(topic_df_values))
+    
 
     cfp_df = pd.merge(cfp_df, topic_df_values, on="unique_id", how="inner")
 
@@ -109,8 +109,6 @@ if selected_category:
     cfp_df['month'] = cfp_df['date'].dt.to_period("M").dt.to_timestamp()
     topic_col = f"Topic {topic_id}"
 
-    def short_title_list(titles):
-        return "<br>".join(titles[:5]) + ("<br>..." if len(titles) > 5 else "")
 
     grouped = (
         cfp_df.groupby('month')
@@ -125,7 +123,7 @@ if selected_category:
     )
 
     grouped['hover_titles'] = grouped['titles'].apply(short_title_list)
-    st.subheader("📈 Topic Frequency Over Time")
+    st.subheader("Topic Frequency Over Time")
 
     fig = px.line(
         grouped,
@@ -193,6 +191,16 @@ if selected_category:
         st.error(f"Could not find word weights at: {word_weights_path}")
     print(topic_df_values.columns)
 
+    st.subheader("Top Documents for this Topic")
+    num_results = st.slider("Numnber of top documents to show:", min_value=1, max_value=20, value=5)
+    top_docs_df = cfp_df.sort_values(by=topic_col, ascending=False).head(num_results)
+
+    for _, row in top_docs_df.iterrows():
+        st.markdown(f"""
+    **[{row['title']}]({row['url']})**
+    Topic Score: `{row[topic_col]:.4f}`
+    ID: `{row['unique_id']}`
+    ---""")   
 # === Cross-category Topic Exploration ===
 if selected_topic_label:
     st.markdown(f"### Cross-field Exploration of Topic: *{selected_topic_label}*")

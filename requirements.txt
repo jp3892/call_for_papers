@@ -7,3 +7,5 @@ wordcloud
 little-mallet-wrapper
 scipy
 seaborn
+folium
+streamlit-folium
