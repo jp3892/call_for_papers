@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-
+import re
 
 st.set_page_config(page_title="Journal Explorer", layout="wide")
 st.title("Journal Explorer")
