@@ -91,7 +91,7 @@ else:
     agg_df = (
         exploded.groupby("universities")
         .agg(
-            num_cfps=("unique_id", "count"),
+            num_cfps=("url", "count"),
             avg_views=("view_count", "mean")
         )
         .sort_values("num_cfps", ascending=False)
