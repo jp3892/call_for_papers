@@ -26,13 +26,13 @@ top_n = st.slider("Show top N Associations by CfP count:", min_value=5, max_valu
 st.bar_chart(associations_counts.head(top_n))
 
 # === Association search ===
-unique_associations = sorted(set(j for sub in cfp_df["associactions"] for a in sub if a.strip()))
+unique_associations = sorted(set(a for sub in cfp_df["associations"] for a in sub if a.strip()))
 selected_association = st.selectbox("Search for an association:", options=unique_associations)
 
 if selected_association:
     st.markdown(f"### CfPs linked to: *{selected_association}*")
 
-    filtered_df = cfp_df[cfp_df["associations"].apply(lambda js: any(re.fullmatch(re.escape(selected_association), j.strip(), flags=re.I) for a in as))].copy()
+    filtered_df = cfp_df[cfp_df["associations"].apply(lambda js: any(re.fullmatch(re.escape(selected_association), j.strip(), flags=re.I) for j in js))].copy()
 
     # Optional filters
     with st.expander("Optional Filters"):
