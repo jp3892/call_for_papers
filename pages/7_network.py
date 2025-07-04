@@ -52,8 +52,8 @@ df = df[
 # === Build Co-Occurrence Graph ===
 G = nx.Graph()
 
-for unis in df["universities"].fillna("").str.split(","):
-    cleaned_unis = sorted(set(u.strip() for u in unis if u.strip()))
+for unis in df["universities"].fillna("").str.split(";"):
+    cleaned_unis = sorted(set(u.strip() for u in unis if u.strip() and u.strip().lower() != "nan"))
     for u1, u2 in itertools.combinations(cleaned_unis, 2):
         if G.has_edge(u1, u2):
             G[u1][u2]["weight"] += 1
