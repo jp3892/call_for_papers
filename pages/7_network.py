@@ -11,6 +11,10 @@ DATA_PATH = "data/cfps_map_subset.csv"
 st.set_page_config(page_title="University-CfPs Network", layout="wide")
 st.title("🎓 University–CfPs Network Graph")
 
+st.write("Files in /data:")
+st.write(os.listdir("data") if os.path.exists("data") else "No data folder")
+
+
 # === Load data ===
 @st.cache_data
 
