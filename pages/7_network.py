@@ -110,6 +110,11 @@ net.set_options('''
   }
 ''')
 
-path = "university_network.html"
-net.save_graph(path)
-components.iframe(path, height=750, scrolling=True)
+import tempfile
+
+with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_file:
+    net.save_graph(tmp_file.name)
+    with open(tmp_file.name, "r", encoding="utf-8") as f:
+        html_content = f.read()
+
+components.html(html_content, height=750, scrolling=True)
