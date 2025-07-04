@@ -9,3 +9,6 @@ scipy
 seaborn
 folium
 streamlit-folium
+networkx
+pyvis.network
+
