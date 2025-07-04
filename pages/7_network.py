@@ -4,16 +4,14 @@ import networkx as nx
 from pyvis.network import Network
 import streamlit.components.v1 as components
 import os
+import itertools
+import tempfile
 
 # === Paths ===
 DATA_PATH = "data/cfps_map_subset.csv"
 
 st.set_page_config(page_title="University-CfPs Network", layout="wide")
-st.title("🎓 University–CfPs Network Graph")
-
-st.write("Files in /data:")
-st.write(os.listdir("data") if os.path.exists("data") else "No data folder")
-
+st.title("🎓 University Co-Occurrence Network")
 
 # === Load data ===
 @st.cache_data
@@ -39,9 +37,7 @@ selected_year_range = st.sidebar.slider("Year Range:", min_year, max_year, (min_
 
 view_threshold = st.sidebar.number_input("Minimum View Count:", value=0, min_value=0, step=1)
 
-min_universities = st.sidebar.number_input("Minimum Universities per CfP:", value=1, min_value=1)
-
-max_nodes = st.sidebar.number_input("Maximum CfPs in Network (for speed):", value=500, min_value=10, step=10)
+min_cooccurrence = st.sidebar.number_input("Minimum Co-Occurrences to Show Edge:", value=1, min_value=1)
 
 # === Apply filters ===
 if selected_category != "All":
@@ -53,47 +49,39 @@ df = df[
     (df["view_count"].fillna(0) >= view_threshold)
 ]
 
-# === Explode universities ===
-df["universities"] = df["universities"].fillna("")
-df_exploded = df.assign(university=df["universities"].str.split(",")).explode("university")
-df_exploded["university"] = df_exploded["university"].str.strip()
-
-# === Filter by min_universities ===
-univ_counts = df_exploded.groupby("unique_id")["university"].nunique()
-valid_ids = univ_counts[univ_counts >= min_universities].index
-df_exploded = df_exploded[df_exploded["unique_id"].isin(valid_ids)]
-
-# === Limit size ===
-cfp_ids = df_exploded["unique_id"].drop_duplicates().head(max_nodes)
-df_exploded = df_exploded[df_exploded["unique_id"].isin(cfp_ids)]
-
-# === Create Graph ===
+# === Build Co-Occurrence Graph ===
 G = nx.Graph()
 
-for _, row in df_exploded.iterrows():
-    cfp_node = f"cfp_{row['unique_id']}"
-    uni_node = f"uni_{row['university']}"
+for unis in df["universities"].fillna("").str.split(","):
+    cleaned_unis = sorted(set(u.strip() for u in unis if u.strip()))
+    for u1, u2 in itertools.combinations(cleaned_unis, 2):
+        if G.has_edge(u1, u2):
+            G[u1][u2]["weight"] += 1
+        else:
+            G.add_edge(u1, u2, weight=1)
 
-    G.add_node(cfp_node, label=row["title"], type="cfp", url=row.get("url", "#"))
-    G.add_node(uni_node, label=row["university"], type="uni")
-    G.add_edge(cfp_node, uni_node)
+# === Filter edges by co-occurrence threshold ===
+edges_to_remove = [(u, v) for u, v, d in G.edges(data=True) if d["weight"] < min_cooccurrence]
+G.remove_edges_from(edges_to_remove)
+
+# Remove isolated nodes
+dangling_nodes = list(nx.isolates(G))
+G.remove_nodes_from(dangling_nodes)
 
 # === Visualize with Pyvis ===
-net = Network(height="700px", width="100%", bgcolor="#ffffff", font_color="#000000")
+net = Network(height="750px", width="100%", bgcolor="#ffffff", font_color="#000000")
 
-for node, data in G.nodes(data=True):
-    if data["type"] == "cfp":
-        net.add_node(node, label=data["label"][:80], title=data["label"], shape="dot", color="#1f78b4", size=10, href=data.get("url"))
-    else:
-        net.add_node(node, label=data["label"], title=data["label"], shape="box", color="#33a02c")
+for node in G.nodes():
+    net.add_node(node, label=node, shape="dot", color="#1f78b4")
 
-for source, target in G.edges():
-    net.add_edge(source, target)
+for u, v, d in G.edges(data=True):
+    net.add_edge(u, v, value=d["weight"], title=f"Co-Occurrences: {d['weight']}")
 
 net.set_options('''
   var options = {
     "nodes": {
-      "font": {"size": 14}
+      "font": {"size": 14},
+      "scaling": {"min": 10, "max": 30}
     },
     "edges": {
       "color": {"inherit": true},
@@ -110,7 +98,21 @@ net.set_options('''
   }
 ''')
 
-import tempfile
+st.subheader("Network Metrics")
+
+# Basic stats
+st.markdown(f"- **Total Universities:** {G.number_of_nodes()}")
+st.markdown(f"- **Total Co-Occurrences (Edges):** {G.number_of_edges()}")
+
+# Degree centrality
+degree_centrality = nx.degree_centrality(G)
+top_universities = sorted(degree_centrality.items(), key=lambda x: x[1], reverse=True)[:10]
+
+st.markdown("#### Top 10 Most Connected Universities")
+for i, (node, centrality) in enumerate(top_universities, 1):
+    uni_label = node.replace("uni_", "")
+    st.markdown(f"{i}. **{uni_label}** – Centrality: `{centrality:.3f}`")
+
 
 with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_file:
     net.save_graph(tmp_file.name)
@@ -118,3 +120,4 @@ with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_file:
         html_content = f.read()
 
 components.html(html_content, height=750, scrolling=True)
+
