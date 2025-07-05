@@ -2,10 +2,11 @@ import streamlit as st
 
 st.title("Call-for-Papers Dataset: Interactive Tools for Further Research")
 st.markdown("""
-For more information about this dataset, data cleaning, curation, limitations, and applications, please refer to the following paper:
+For more information about this dataset, data cleaning, curation, limitations, and applications, please refer to the following companion paper:
 ["The Overlooked Genre of Calls-for-Papers: New Grounds to Study Shifts and Connections in Academic Discourse."](https://openhumanitiesdata.metajnl.com/articles/10.5334/johd.278)
 
-Or contact me at
+Or feel free to contact me at
+
 ja827@cornell.edu
 
 [Juan-Pablo Albornoz](https://english.cornell.edu/juan-pablo-albornoz-0), Cornell University
@@ -15,8 +16,8 @@ ja827@cornell.edu
 - [Summer Graduate Fellowship in Digital Humanities at Cornell University](https://www.library.cornell.edu/about/staff/central-departments/digital-scholarship/colab-programs/summer-dh/)
 - Iliana Burgos, etc
 - Lindsay Thomas, Cornell University
-- Journal of Open Humanities Data
-- The folks at the University of Pennsylvania CfP Website
+- [Journal of Open Humanities Data](https://openhumanitiesdata.metajnl.com/)
+- The folks at the [University of Pennsylvania CfP Website](https://call-for-papers.sas.upenn.edu/)
 
 
 ### What you can do here:
@@ -28,12 +29,41 @@ ja827@cornell.edu
  
 This app uses slimmed versions of the main dataset. To access the full dataset, please refer to the [Harvard Dataverse Repository.](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DFSMBN) 
 
-This app was created for research purposes only. 
+This app was created for research purposes only.
+I used ChatGpT and Copilot to help correct and write some of the code used in this app.
 
 ### Topic modeling 
+- The topic modeling was trained using [Little_Mallet_Wrapper](https://github.com/maria-antoniak/little-mallet-wrapper), developed by Maria Antoniak. The base code was written following Melanie Walsh's [topic modeling tutorial](https://melaniewalsh.github.io/Intro-Cultural-Analytics/welcome.html).
+- The topic modeling page allows you to browse the results by field and topic.
+    - **Field:** every Call-for-Paper from the [University of Pennsylvania Call-for-Papers Website](https://call-for-papers.sas.upenn.edu/) is tagged with one or more category tags. The tagging is made by the indiviudal CfP uploader, who selects the tags from a pre-set list of 41 available category tags. Each category tag is here taken as a field. 
+    - **Topic:** The topic labelling was done by me, after analyzing the results for each field. 
+- **Topic numbers:**
+    - With the whole dataset, I experimented with 10, 15, 20, 35, and 41 topics. I found the 35-topic list to present the most robust results. 
+    - I trained each individual field to produce 20 topics. I used a common stop-word list plus a custom stop-word list. The custom stop-word list was made to have the model avoid words that are specific to the call-for-paper genre but that I did not see fit to include, such as "call", "conference", or "panel".
+- **CfP Discourse Topic:** 
+    - After analyzing the results, I decided to label one of the topics "CfP Discourse". This is a topic that tries to reflect the typical discourse, rather than the content, present in the CfPs.
+- **NA Topics:**
+    - Because I made the decision to train all fields with 20 topics, some of the results do not give a clear, useful topic. I therefore labelled these NA.
+
+
+
 ### Map
+- I used NER to extract university names from the whole dataset. Locations were then extracted from university info and organizer emails using [GeoPy](https://geopy.readthedocs.io/en/stable/)
+- A location means that the CfP includes a university name in that location.            
 ### Universities
+- This page simply aggregates the CfP counts for individual unviersity and allows any researcher to browse CfPs by university.
 ### Journals
+- Extracting journal information from the CfP database was a half-success, as Regex and NER produced many false positives and negatives. The best experiment resulted from using [Open Alex's API](https://openalex.org/) to source journal names. This limitation must be taken into account. 
 ### Associations
+
 ### Network
+- I used [Pyvis](https://pyvis.readthedocs.io/en/latest/) to create an interactive ntewrok visualization.
+- Each node is a university and the edges represent the number of call-for-papers in which they are associated. For a better experience, I recommend filtering by category, university, or using a high co-ocurrence number.
+
+### Limitations and Possible Enhancements
+- This list is by no means exhaustive and I absolutely welcome further feedback.
+    - **Topic modeling:** one big mistake was that I did not filter out the field title during training. This mistakes implies that, for example, in the category of "Victorian" the model detects "victorian" as an important word in many topics. However, given the time cit takes to manually label all the topics, I did not retrain.
+    - 20 might not be the best topic number for each category. A better training would try to figure out the optimal number of topics for each category.
+    - All information extracted through NER or regex might be incomplete, or false positives might be present. 
+    - A search engine that would allow researchers to look for specific topics could represent a nice addition to this app. 
 """)

@@ -37,7 +37,7 @@ selected_year_range = st.sidebar.slider("Year Range:", min_year, max_year, (min_
 
 view_threshold = st.sidebar.number_input("Minimum View Count:", value=0, min_value=0, step=1)
 
-min_cooccurrence = st.sidebar.number_input("Minimum Co-Occurrences to Show Edge:", value=1, min_value=1)
+min_cooccurrence = st.sidebar.number_input("Minimum Co-Occurrences to Show Edge:", value=10, min_value=2)
 
 # === Apply filters ===
 if selected_category != "All":
