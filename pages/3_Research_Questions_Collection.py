@@ -58,8 +58,22 @@ sort_by = st.sidebar.radio("Sort by", ["Date", "View Count"])
 
 # === Semantic Search Input ===
 st.title("Research Questions Explorer")
-search_query = st.text_input("Enter a research topic or question:")
+st.markdown("""
+    <div style="border-radius: 12px; background: #fff7e6; padding: 1.5rem; border-left: 6px solid #f4b400;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+    <p style="margin:0; font-size: 1.1rem;">
+    <strong> CfPs often pose relevant, pressing research questions that shape the outcomes of panels, articles, and chapters. </strong> 
+    I used Gemini's 2.0 Flash LLM to extract research questions from the whole dataset.  
+    </p>
+    <br>
+    <p style="margin:0; font-size: 1.05rem;">
+    Feel free to browse by field, or type in your own topic or research question. 
+    </p>
+</div>
+<p>
+""", unsafe_allow_html=True) 
 
+search_query = st.text_input("**Enter a research topic or question:**")
 # === Semantic Search ===
 if search_query:
     model = load_model()

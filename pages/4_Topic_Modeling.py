@@ -8,8 +8,27 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 from wordcloud import WordCloud
 
-st.set_page_config(page_title="Topic Modeling Explorer", layout="wide")
-st.title("Topic Modeling Explorer")
+st.set_page_config(page_title="Topic Modeling", layout="wide")
+st.title("Topic Modeling")
+
+st.markdown("""
+    <div style="border-radius: 12px; background: #fff7e6; padding: 1.5rem; border-left: 6px solid #f4b400;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+    <p style="margin:0; font-size: 1.1rem;">
+    <strong> Where are the humanities going? How have the key topics and questions in our fields changed over the years?
+    </strong> </p>
+    </p> I used Mallet to explore the different kinds of "topics" that appear in the CfPs dataset. 
+    <p>
+    <p style="margin:0; font-size: 1.05rem;">
+    Every CfP hosted by the UPenn CfP Website is tagged by the submitter with one or more category tags.  A field corresponds here with the category tags from the website. 
+    </p>
+    <p> 
+    <p>For example, the results of the field "Victorian" correspond to a topic modeling of all CfPs tagged with "victorian". The topics were manually labelled. </p>
+    <p>NA = Does not apply (no topic label made).
+    <p>For more information about data curation decisions regarding topic modeling, please check the documentation in the About page
+</div>
+<p>
+""", unsafe_allow_html=True) 
 
 # === Step 1: Set base path ===
 BASE_PATH = "topic_model_output_slimmed/Topic_modeling_jsons"

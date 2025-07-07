@@ -11,7 +11,7 @@ import tempfile
 DATA_PATH = "data/cfps_map_subset.csv"
 
 st.set_page_config(page_title="University-CfPs Network", layout="wide")
-st.title("🎓 University Co-Occurrence Network")
+st.title("University Co-Occurrence Network")
 
 # === Load data ===
 @st.cache_data

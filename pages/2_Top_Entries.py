@@ -14,6 +14,19 @@ df, top25 = load_data()
 st.set_page_config(page_title="Dashboard", layout="wide")
 st.title("View Count Overview and Top Entries")
 
+st.markdown("""
+            <div style="border-radius: 12px; background: #fff7e6; padding: 1.5rem; border-left: 6px solid #f4b400;
+             box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+    <p style="margin:0; font-size: 1.1rem;">
+    <strong> What makes a Call-for-Papers (CfP) successful? </strong> Whether made for a conference, journal, or book collection, CfPs are designed to attract the best scholars thinking about a matter.  
+    </p>
+    <br>
+    <p style="margin:0; font-size: 1.05rem;">
+    The page below lists the 25 top CfPs hosted by the University of Pennsylvania CfP Website by view count. 
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
 # === Part 1: View Count Summary ===
 st.header("Overall Statistics")
 

@@ -1,8 +1,24 @@
 import streamlit as st
 
-st.title("Call-for-Papers Dataset: Interactive Tools for Further Research")
+st.title("The Call-For-Papers Dataset Companion")
 st.markdown("""
+
+<div style="border-radius: 12px; background: #fff7e6; padding: 1.5rem; border-left: 6px solid #f4b400;
+             box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+    <p style="margin:0; font-size: 1.1rem;">
+    <strong>A call-for-papers is often the first building block of new ideas,</strong>
+    connecting scholars around the world that are thinking about critical questions of the present.
+    </p>
+    <br>
+    <p style="margin:0; font-size: 1.05rem;">
+    This app invites users to explore a large Call-For-Papers dataset in the humanities, 
+    allowing them to discover and analyze new or old trends, connections, and research questions.
+    </p>
+</div>
+
+</p>
 For more information about this dataset, data cleaning, curation, limitations, and applications, please refer to the following companion paper:
+            
 ["The Overlooked Genre of Calls-for-Papers: New Grounds to Study Shifts and Connections in Academic Discourse."](https://openhumanitiesdata.metajnl.com/articles/10.5334/johd.278)
 
 Or feel free to contact me at
@@ -19,10 +35,7 @@ ja827@cornell.edu
 - The folks at the [University of Pennsylvania CfP Website](https://call-for-papers.sas.upenn.edu/)
 
 
-### What you can do here:
-- Explore topic modeling results across time and fields.
-- Browse CfPs via an interactive geographical map.
-- Search and browse a growing bag of extracted research questions.
+
             
 ### For documentation about the pages in this app, see below. 
  
@@ -66,4 +79,4 @@ I used ChatGpT and Copilot to help correct and write some of the code used in th
     - BERTopic might be worth a try
     - All information extracted through NER or regex might be incomplete, or false positives might be present. 
     - A search engine that would allow researchers to look for specific topics could represent a nice addition to this app. 
-""")
+""", unsafe_allow_html=True)
