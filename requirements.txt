@@ -13,3 +13,4 @@ networkx
 pyvis
 sentence-transformers
 scikit-learn
+altair

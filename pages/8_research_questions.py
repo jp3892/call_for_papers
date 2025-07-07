@@ -52,9 +52,6 @@ selected_universities = st.sidebar.multiselect("University", all_universities)
 #all_assocs = sorted(set(a.strip() for assocs in df['associations'].dropna() for a in assocs.split(';')))
 #selected_associations = st.sidebar.multiselect("Association", all_assocs)
 
-# View Count Filter
-view_min, view_max = int(df['view_count'].min()), int(df['view_count'].max())
-view_range = st.sidebar.slider("View Count", view_min, view_max, (view_min, view_max))
 
 # Sort Option
 sort_by = st.sidebar.radio("Sort by", ["Date", "View Count"])
