@@ -83,7 +83,6 @@ if selected_universities:
 #    results = results[results['associations'].apply(
  #       lambda x: any(a.strip() in x.split(';') for a in selected_associations) if pd.notna(x) else False)] 
 
-results = results[(results['view_count'] >= view_range[0]) & (results['view_count'] <= view_range[1])]
 
 if sort_by == "Date":
     results = results.sort_values("date", ascending=False)
