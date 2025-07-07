@@ -13,8 +13,7 @@ ja827@cornell.edu
             
 **Special thanks to** 
 
-- [Summer Graduate Fellowship in Digital Humanities at Cornell University](https://www.library.cornell.edu/about/staff/central-departments/digital-scholarship/colab-programs/summer-dh/)
-- Iliana Burgos, etc
+- The whole team and cohort at the [Summer Graduate Fellowship in Digital Humanities at Cornell University](https://www.library.cornell.edu/about/staff/central-departments/digital-scholarship/colab-programs/summer-dh/)
 - Lindsay Thomas, Cornell University
 - [Journal of Open Humanities Data](https://openhumanitiesdata.metajnl.com/)
 - The folks at the [University of Pennsylvania CfP Website](https://call-for-papers.sas.upenn.edu/)
@@ -34,7 +33,7 @@ I used ChatGpT and Copilot to help correct and write some of the code used in th
 
 ### Topic modeling 
 - The topic modeling was trained using [Little_Mallet_Wrapper](https://github.com/maria-antoniak/little-mallet-wrapper), developed by Maria Antoniak. The base code was written following Melanie Walsh's [topic modeling tutorial](https://melaniewalsh.github.io/Intro-Cultural-Analytics/welcome.html).
-- The topic modeling page allows you to browse the results by field and topic.
+- The topic modeling page allows the user to browse the results by field and topic.
     - **Field:** every Call-for-Paper from the [University of Pennsylvania Call-for-Papers Website](https://call-for-papers.sas.upenn.edu/) is tagged with one or more category tags. The tagging is made by the indiviudal CfP uploader, who selects the tags from a pre-set list of 41 available category tags. Each category tag is here taken as a field. 
     - **Topic:** The topic labelling was done by me, after analyzing the results for each field. 
 - **Topic numbers:**
@@ -64,6 +63,7 @@ I used ChatGpT and Copilot to help correct and write some of the code used in th
 - This list is by no means exhaustive and I absolutely welcome further feedback.
     - **Topic modeling:** one big mistake was that I did not filter out the field title during training. This mistakes implies that, for example, in the category of "Victorian" the model detects "victorian" as an important word in many topics. However, given the time cit takes to manually label all the topics, I did not retrain.
     - 20 might not be the best topic number for each category. A better training would try to figure out the optimal number of topics for each category.
+    - BERTopic might be worth a try
     - All information extracted through NER or regex might be incomplete, or false positives might be present. 
     - A search engine that would allow researchers to look for specific topics could represent a nice addition to this app. 
 """)

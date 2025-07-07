@@ -11,4 +11,5 @@ folium
 streamlit-folium
 networkx
 pyvis
-
+sentence-transformers
+scikit-learn
