@@ -38,7 +38,7 @@ def get_embeddings(questions):
 embeddings = get_embeddings(df['research_questions'].tolist())
 
 # === Sidebar Filters ===
-st.sidebar.header("📂 Filter Options")
+st.sidebar.header("Filter Options")
 
 # Filter: Categories (comma-separated)
 all_categories = sorted(set(cat.strip() for cats in df['categories'].dropna() for cat in cats.split(',')))
@@ -60,8 +60,8 @@ view_range = st.sidebar.slider("View Count", view_min, view_max, (view_min, view
 sort_by = st.sidebar.radio("Sort by", ["Date", "View Count"])
 
 # === Semantic Search Input ===
-st.title("🔬 Research Questions Explorer")
-search_query = st.text_input("🔍 Enter a research topic or question to explore:")
+st.title("Research Questions Explorer")
+search_query = st.text_input("Enter a research topic or question:")
 
 # === Semantic Search ===
 if search_query:
@@ -82,9 +82,9 @@ if selected_universities:
     results = results[results['universities'].apply(
         lambda x: any(u.strip() in x.split(';') for u in selected_universities) if pd.notna(x) else False)]
 
-'''if selected_associations:
-    results = results[results['associations'].apply(
-        lambda x: any(a.strip() in x.split(';') for a in selected_associations) if pd.notna(x) else False)]'''
+#if selected_associations: 
+#    results = results[results['associations'].apply(
+ #       lambda x: any(a.strip() in x.split(';') for a in selected_associations) if pd.notna(x) else False)] 
 
 results = results[(results['view_count'] >= view_range[0]) & (results['view_count'] <= view_range[1])]
 
@@ -99,7 +99,7 @@ st.markdown(f"### Showing {len(results)} results")
 for _, row in results.iterrows():
     st.markdown(f"""
 ** {row['research_questions']}**
-- {row['date']} | 👁️ {row['view_count']}
+- {row['date']} | views: {row['view_count']}
 - [View CfP]({row['url']})
 - *Categories*: {row['categories']}
 - *Universities*: {row['universities']}
