@@ -49,8 +49,8 @@ all_universities = sorted(set(u.strip() for unis in df['universities'].dropna() 
 selected_universities = st.sidebar.multiselect("University", all_universities)
 
 # Filter: Associations (semicolon-separated)
-all_assocs = sorted(set(a.strip() for assocs in df['associations'].dropna() for a in assocs.split(';')))
-selected_associations = st.sidebar.multiselect("Association", all_assocs)
+#all_assocs = sorted(set(a.strip() for assocs in df['associations'].dropna() for a in assocs.split(';')))
+#selected_associations = st.sidebar.multiselect("Association", all_assocs)
 
 # View Count Filter
 view_min, view_max = int(df['view_count'].min()), int(df['view_count'].max())
@@ -82,9 +82,9 @@ if selected_universities:
     results = results[results['universities'].apply(
         lambda x: any(u.strip() in x.split(';') for u in selected_universities) if pd.notna(x) else False)]
 
-if selected_associations:
+'''if selected_associations:
     results = results[results['associations'].apply(
-        lambda x: any(a.strip() in x.split(';') for a in selected_associations) if pd.notna(x) else False)]
+        lambda x: any(a.strip() in x.split(';') for a in selected_associations) if pd.notna(x) else False)]'''
 
 results = results[(results['view_count'] >= view_range[0]) & (results['view_count'] <= view_range[1])]
 
@@ -98,11 +98,11 @@ st.markdown(f"### Showing {len(results)} results")
 
 for _, row in results.iterrows():
     st.markdown(f"""
-**🔹 {row['research_questions']}**
-- 📅 {row['date']} | 👁️ {row['view_count']}
-- 🔗 [View CfP]({row['url']})
-- 📚 *Categories*: {row['categories']}
-- 🏛️ *Universities*: {row['universities']}
-- 🧩 *Associations*: {row['associations']}
-""" + (f"- 🧠 *Similarity*: `{row['similarity']:.2f}`" if search_query else ""))
+** {row['research_questions']}**
+- {row['date']} | 👁️ {row['view_count']}
+- [View CfP]({row['url']})
+- *Categories*: {row['categories']}
+- *Universities*: {row['universities']}
+
+""" + (f"-  *Similarity*: `{row['similarity']:.2f}`" if search_query else ""))
     st.markdown("---")
