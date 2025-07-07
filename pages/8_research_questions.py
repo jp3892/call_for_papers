@@ -80,9 +80,6 @@ if selected_universities:
         lambda x: any(u.strip() in x.split(';') for u in selected_universities) if pd.notna(x) else False)]
 
 #if selected_associations: 
-#    results = results[results['associations'].apply(
- #       lambda x: any(a.strip() in x.split(';') for a in selected_associations) if pd.notna(x) else False)] 
-
 
 if sort_by == "Date":
     results = results.sort_values("date", ascending=False)
