@@ -37,79 +37,66 @@ def get_embeddings(questions):
 
 embeddings = get_embeddings(df['research_questions'].tolist())
 
-# === Sidebar Filters ===
-st.sidebar.header("Filter Options")
+# === Page Title and Intro ===
+st.set_page_config(page_title="Research Questions Collection", layout="wide")
+st.title("Research Questions Collection")
 
-# Filter: Categories (comma-separated)
-all_categories = sorted(set(cat.strip() for cats in df['categories'].dropna() for cat in cats.split(',')))
-selected_categories = st.sidebar.multiselect("Category", all_categories)
-
-# Filter: Universities (semicolon-separated)
-all_universities = sorted(set(u.strip() for unis in df['universities'].dropna() for u in unis.split(';')))
-selected_universities = st.sidebar.multiselect("University", all_universities)
-
-# Filter: Associations (semicolon-separated)
-#all_assocs = sorted(set(a.strip() for assocs in df['associations'].dropna() for a in assocs.split(';')))
-#selected_associations = st.sidebar.multiselect("Association", all_assocs)
-
-
-# Sort Option
-sort_by = st.sidebar.radio("Sort by", ["Date", "View Count"])
-
-# === Semantic Search Input ===
-st.title("Research Questions Explorer")
 st.markdown("""
-    <div style="border-radius: 12px; background: #fff7e6; padding: 1.5rem; border-left: 6px solid #f4b400;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-    <p style="margin:0; font-size: 1.1rem;">
-    <strong> CfPs often pose relevant, pressing research questions that shape the outcomes of panels, articles, and chapters. </strong> 
-    I used Gemini's 2.0 Flash LLM to extract research questions from the whole dataset.  
-    </p>
-    <br>
-    <p style="margin:0; font-size: 1.05rem;">
-    Feel free to browse by field, or type in your own topic or research question. 
-    </p>
+<div style="border-radius: 12px; background: #fff7e6; padding: 1.5rem; border-left: 6px solid #f4b400;
+box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 1.05rem;">
+<p><strong>Call-for-papers often pose relevant, pressing research questions that shape the outcomes of panels, articles, and chapters.</strong> 
+<p>I used Gemini's 2.0 Flash LLM to extract research questions from the full dataset.</p>
+<p>You can either <strong>type your own topic or question</strong> below for semantic search, or <strong>browse by field</strong> using the filter.</p>
 </div>
 <p>
-""", unsafe_allow_html=True) 
+""", unsafe_allow_html=True)
 
-search_query = st.text_input("**Enter a research topic or question:**")
-# === Semantic Search ===
+# === Search Input ===
+search_query = st.text_input("Enter a research topic or question (or leave blank to browse):")
+
+# === Controls Below Input ===
+col1, col2 = st.columns([2, 2])
+
+with col1:
+    if not search_query:
+        # === Show Category Filter (only in browse mode) ===
+        all_categories = sorted(set(cat.strip() for cats in df['categories'].dropna() for cat in cats.split(',')))
+        selected_categories = st.multiselect("Browse by Field", all_categories)
+    else:
+        selected_categories = []
+
+with col2:
+    # === Sort Option ===
+    sort_option = st.radio("Sort results by:", ["Similarity", "Date"] if search_query else ["Date"], horizontal=True)
+
+# === Semantic Search or Browse ===
 if search_query:
     model = load_model()
     query_vec = model.encode([search_query])
     sims = cosine_similarity(query_vec, embeddings)[0]
     df['similarity'] = sims
-    results = df.sort_values("similarity", ascending=False).head(50)
+    results = df.sort_values("similarity", ascending=False).copy()
 else:
     results = df.copy()
+    if selected_categories:
+        results = results[results['categories'].apply(
+            lambda x: any(cat.strip() in x.split(',') for cat in selected_categories) if pd.notna(x) else False)]
 
-# === Apply Filters ===
-if selected_categories:
-    results = results[results['categories'].apply(
-        lambda x: any(cat.strip() in x.split(',') for cat in selected_categories) if pd.notna(x) else False)]
-
-if selected_universities:
-    results = results[results['universities'].apply(
-        lambda x: any(u.strip() in x.split(';') for u in selected_universities) if pd.notna(x) else False)]
-
-#if selected_associations: 
-
-if sort_by == "Date":
+# === Sort Final Results ===
+if sort_option == "Date":
     results = results.sort_values("date", ascending=False)
-else:
-    results = results.sort_values("view_count", ascending=False)
+elif sort_option == "Similarity" and "similarity" in results.columns:
+    results = results.sort_values("similarity", ascending=False)
 
 # === Display Results ===
 st.markdown(f"### Showing {len(results)} results")
 
 for _, row in results.iterrows():
     st.markdown(f"""
-** {row['research_questions']}**
-- {row['date']} | views: {row['view_count']}
-- [View CfP]({row['url']})
-- *Categories*: {row['categories']}
-- *Universities*: {row['universities']}
-
-""" + (f"-  *Similarity*: `{row['similarity']:.2f}`" if search_query else ""))
+**{row['research_questions']}**  
+{row['date']} | 👁️ {row['view_count']}  
+[View CfP]({row['url']})  
+*Categories*: {row['categories']}  
+*Universities*: {row['universities']}  
+""" + (f"🧠 *Similarity*: `{row['similarity']:.2f}`" if search_query else ""))
     st.markdown("---")
