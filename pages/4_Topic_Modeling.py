@@ -79,6 +79,7 @@ if selected_category:
         topic_df = pd.DataFrame(topics)
         st.subheader(f"Topics *{selected_category}*")
         st.dataframe(topic_df)
+        st.markdown(f"Note: NA labels indicate that I could not label them confidently with a topic. Suggestions to change any label are very welcome!")
     except Exception as e:
         st.error(f"❌ Error loading {file_path}: {e}")
 

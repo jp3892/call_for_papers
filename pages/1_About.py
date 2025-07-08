@@ -44,6 +44,22 @@ This app uses slimmed versions of the main dataset. To access the full dataset, 
 This app was created for research purposes only.
 I used ChatGpT and Copilot to help correct and write some of the code used in this app.
 
+### Research Questions Collection
+- I used Gemini's Flash 2.0 LLM to extract research questions from the dataset. 
+- The exact prompt I used was: "Read the data and extract any explicit research questions you find from each entry. It is okay if you do not find any research questions. 
+Return a JSON list like:
+[
+  {{
+    "unique_id": "abc123",
+    "research_questions": ["..."]
+  }},
+  ...
+]
+"
+- The LLM picked both direct and indirect questions.
+- Important note: LLMs may hallucinate. You can check the URL of the original CfP to corroborate accuracy. 
+- Search function was made by calculating similarity scores through embeddings via [SBERT](https://sbert.net/).
+            
 ### Topic modeling 
 - The topic modeling was trained using [Little_Mallet_Wrapper](https://github.com/maria-antoniak/little-mallet-wrapper), developed by Maria Antoniak. The base code was written following Melanie Walsh's [topic modeling tutorial](https://melaniewalsh.github.io/Intro-Cultural-Analytics/welcome.html).
 - The topic modeling page allows the user to browse the results by field and topic.

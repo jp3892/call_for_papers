@@ -94,9 +94,9 @@ st.markdown(f"### Showing {len(results)} results")
 for _, row in results.iterrows():
     st.markdown(f"""
 **{row['research_questions']}**  
-{row['date']} | 👁️ {row['view_count']}  
+{row['date']} | {row['view_count']}  
 [View CfP]({row['url']})  
 *Categories*: {row['categories']}  
 *Universities*: {row['universities']}  
-""" + (f"🧠 *Similarity*: `{row['similarity']:.2f}`" if search_query else ""))
+""" + (f"*Similarity*: `{row['similarity']:.2f}`" if search_query else ""))
     st.markdown("---")
