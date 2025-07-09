@@ -94,7 +94,7 @@ st.markdown(f"### Showing {len(results)} results")
 for _, row in results.iterrows():
     st.markdown(f"""
 **{row['research_questions']}**  
-{row['date']} | {row['view_count']}  
+{row['date']} | *View Count:* {row['view_count']}  
 [View CfP]({row['url']})  
 *Categories*: {row['categories']}  
 *Universities*: {row['universities']}  

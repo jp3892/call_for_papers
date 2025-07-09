@@ -20,7 +20,7 @@ st.markdown("""
     </p> I used Mallet to explore the different kinds of "topics" that appear in the CfPs dataset. 
     <p>
     <p style="margin:0; font-size: 1.05rem;">
-    Every CfP hosted by the UPenn CfP Website is tagged by the submitter with one or more category tags.  A field corresponds here with the category tags from the website. 
+    Every CfP hosted by the UPenn CfP Website is tagged by the submitter with one or more category tags.  A <strong>field</strong> corresponds here with the category tags from the website. 
     </p>
     <p> 
     <p>For example, the results of the field "Victorian" correspond to a topic modeling of all CfPs tagged with "victorian". The topics were manually labelled. </p>
@@ -48,7 +48,20 @@ def short_title_list(titles):
 
 # === Detect available topic models ===
 topic_files = [f for f in os.listdir(BASE_PATH) if f.startswith("topics_") and f.endswith(".json")]
-categories = [f.replace("topics_", "").replace(".json", "") for f in topic_files]
+# Original internal names (from filenames)
+raw_categories = [f.replace("topics_", "").replace(".json", "") for f in topic_files]
+
+# For display: replace _ and - with spaces and Title Case them
+display_categories = [
+    cat.replace("_", " ").title()
+    for cat in raw_categories
+]
+
+# Mapping from display name to internal file name
+category_lookup = dict(zip(display_categories, raw_categories))
+
+categories = display_categories  # Now cleanly formatted for UI
+
 
 if not categories:
     st.warning("⚠️ No topic files found.")
@@ -61,7 +74,9 @@ selected_category = None
 selected_topic_label = None
 
 if mode == "By Field":
-    selected_category = st.selectbox("Choose a field to explore:", sorted(categories))
+    selected_display_category = st.selectbox("Choose a field to explore:", sorted(categories))
+    selected_category = category_lookup[selected_display_category]  # Internal filename version
+
 elif mode == "By Topic":
     topic_labels = set()
     for f in topic_files:
@@ -77,9 +92,9 @@ if selected_category:
         with open(file_path, "r") as f:
             topics = json.load(f)
         topic_df = pd.DataFrame(topics)
-        st.subheader(f"Topics *{selected_category}*")
+        st.subheader(f"Topics *{selected_display_category}*")
         st.dataframe(topic_df)
-        st.markdown(f"Note: NA labels indicate that I could not label them confidently with a topic. Suggestions to change any label are very welcome!")
+        st.markdown(f"**Note**: NA labels indicate that I could not confidently group together the words under a useful topic. Suggestions to change any label are very welcome!")
     except Exception as e:
         st.error(f"❌ Error loading {file_path}: {e}")
 
@@ -87,9 +102,32 @@ if selected_category:
     topic_id = int(selected_topic.split(":")[0])
     topic_label = next(t['label'] for t in topics if t['topic_id'] == topic_id)
     top_words = next(t['top_words'] for t in topics if t['topic_id'] == topic_id)
-
+    model_dir = f"topic_model_output_slimmed/cfps20_{selected_category}"
     st.markdown(f"### Topic {topic_id}: *{topic_label}*")
-    st.write("Top words:", ", ".join(top_words))
+    word_weights_path = os.path.join(model_dir, "mallet.word_weights.top50")
+    word_freq = {}
+    try:
+        with open(word_weights_path, "r") as f:
+            for line in f:
+                parts = line.strip().split("\t")
+                if len(parts) != 3:
+                    continue
+                t_index, word, weight_str = parts
+                if t_index == str(topic_id):
+                    try:
+                        word_freq[word] = float(weight_str)
+                    except ValueError:
+                        continue
+        wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(word_freq)
+        st.subheader("Word Cloud")
+        fig_wc, ax_wc = plt.subplots(figsize=(10, 5))
+        ax_wc.imshow(wordcloud, interpolation='bilinear')
+        ax_wc.axis("off")
+        ax_wc.set_title(f"Topic {topic_id}: {topic_label}")
+        st.pyplot(fig_wc)
+    except FileNotFoundError:
+        st.error(f"Could not find word weights at: {word_weights_path}")
+    
 
     cfp_df = full_cfp_df.copy()
     
@@ -106,7 +144,7 @@ if selected_category:
 
 
 
-    model_dir = f"topic_model_output_slimmed/cfps20_{selected_category}"
+    
     topic_dist_path = os.path.join(model_dir, "mallet.topic_distributions.20")
     training_ids_path = os.path.join(model_dir, "training_ids.txt")
 
@@ -163,14 +201,27 @@ if selected_category:
     st.plotly_chart(fig, use_container_width=True)
 
     month_options = grouped['month'].dt.strftime('%Y-%m')
-    selected_month_str = st.selectbox("📅 Select a month to see full CfPs", month_options)
+    selected_month_str = st.selectbox("Select a month to see full CfPs", month_options)
     selected_ts = pd.to_datetime(selected_month_str)
     month_df = cfp_df[cfp_df['month'] == selected_ts]
 
-    st.markdown(f"### 📄 CfPs for {selected_month_str} ({len(month_df)} total)")
+    st.markdown(f"### CfPs for {selected_month_str} ({len(month_df)} total)")
 
-    for _, row in month_df.iterrows():
+    # Show top 5 entries
+    top5_df = month_df.head(5)
+
+    for _, row in top5_df.iterrows():
         st.markdown(f"""
+    **[{row['title']}]({row['url']})**  
+    Topic Score: `{row[topic_col]:.4f}`  
+    ID: `{row['unique_id']}`
+    ---""")
+
+    # Expander for all entries
+    if len(month_df) > 5:
+        with st.expander("Show all entries for this month"):
+            for _, row in month_df.iloc[5:].iterrows():
+                st.markdown(f"""
     **[{row['title']}]({row['url']})**  
     Topic Score: `{row[topic_col]:.4f}`  
     ID: `{row['unique_id']}`
@@ -186,30 +237,7 @@ if selected_category:
             mime="text/csv"
         )
 
-    word_weights_path = os.path.join(model_dir, "mallet.word_weights.top50")
-    word_freq = {}
-    try:
-        with open(word_weights_path, "r") as f:
-            for line in f:
-                parts = line.strip().split("\t")
-                if len(parts) != 3:
-                    continue
-                t_index, word, weight_str = parts
-                if t_index == str(topic_id):
-                    try:
-                        word_freq[word] = float(weight_str)
-                    except ValueError:
-                        continue
-        wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(word_freq)
-        st.subheader("Word Cloud")
-        fig_wc, ax_wc = plt.subplots(figsize=(10, 5))
-        ax_wc.imshow(wordcloud, interpolation='bilinear')
-        ax_wc.axis("off")
-        ax_wc.set_title(f"Topic {topic_id}: {topic_label}")
-        st.pyplot(fig_wc)
-    except FileNotFoundError:
-        st.error(f"Could not find word weights at: {word_weights_path}")
-    print(topic_df_values.columns)
+
 
     st.subheader("Top Documents for this Topic")
     num_results = st.slider("Numnber of top documents to show:", min_value=1, max_value=20, value=5)
@@ -238,7 +266,7 @@ if selected_topic_label:
         st.stop()
 
     for cat, tid, label, words in matching_entries:
-        st.markdown(f"#### 📚 Field: *{cat}*, Topic {tid}")
+        st.markdown(f"#### Field: *{cat}*, Topic {tid}")
         st.write("Top words:", ", ".join(words))
 
         subset_df = full_cfp_df[full_cfp_df["categories"].str.contains(fr"\b{re.escape(cat)}\b", case=False, na=False)].copy()

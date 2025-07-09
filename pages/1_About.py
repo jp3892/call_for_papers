@@ -44,18 +44,12 @@ This app uses slimmed versions of the main dataset. To access the full dataset, 
 This app was created for research purposes only.
 I used ChatGpT and Copilot to help correct and write some of the code used in this app.
 
+### Top Entries
+- I extracted the view count of the CfPs in the University of Pennsylvania CfP Website. View count extraction was performed in June, 2025. This will be updated with some regularity. 
+
 ### Research Questions Collection
 - I used Gemini's Flash 2.0 LLM to extract research questions from the dataset. 
-- The exact prompt I used was: "Read the data and extract any explicit research questions you find from each entry. It is okay if you do not find any research questions. 
-Return a JSON list like:
-[
-  {{
-    "unique_id": "abc123",
-    "research_questions": ["..."]
-  }},
-  ...
-]
-"
+- The exact prompt I used was: "Read the data and extract any explicit research questions you find from each entry. Leave blank if you do not find any research questions."
 - The LLM picked both direct and indirect questions.
 - Important note: LLMs may hallucinate. You can check the URL of the original CfP to corroborate accuracy. 
 - Search function was made by calculating similarity scores through embeddings via [SBERT](https://sbert.net/).
@@ -83,7 +77,7 @@ Return a JSON list like:
 ### Journals
 - Extracting journal information from the CfP database was a half-success, as Regex and NER produced many false positives and negatives. The best experiment resulted from using [Open Alex's API](https://openalex.org/) to source journal names. This limitation must be taken into account. 
 ### Associations
-
+- This page allows the user to browse CfPs by Association (e.g. MLA)
 ### Network
 - I used [Pyvis](https://pyvis.readthedocs.io/en/latest/) to create an interactive ntewrok visualization.
 - Each node is a university and the edges represent the number of call-for-papers in which they are associated. For a better experience, I recommend filtering by category, university, or using a high co-ocurrence number.
@@ -95,4 +89,27 @@ Return a JSON list like:
     - BERTopic might be worth a try
     - All information extracted through NER or regex might be incomplete, or false positives might be present. 
     - A search engine that would allow researchers to look for specific topics could represent a nice addition to this app. 
+
+### External Links:
+- Python packages documentation
+    - [Pandas](https://pandas.pydata.org/docs/)
+    - [Matplotlib](https://matplotlib.org/stable/index.html)
+    - [Plotly](https://plotly.com/python/)
+    - [NLTK](https://www.nltk.org/)
+    - [Little Mallet Wrapper](https://github.com/maria-antoniak/little-mallet-wrapper)
+    - [SciPy](https://docs.scipy.org/doc/scipy/)
+    - [Folium](https://python-visualization.github.io/folium/latest/)
+    - [Pyvis](https://pyvis.readthedocs.io/en/latest/index.html)
+    - [Sentence-Transformers](https://sbert.net/)
+    - [Scikit-learn](https://scikit-learn.org/stable/)
+    - [Altair](https://altair-viz.github.io/)
+ - Python Scripts, Topic Modeling Full data, Full Dataset:
+    - [Harvard Dataverse Repository.](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DFSMBN)**Note: not yet updated**
+    - [GitHub Repo](https://github.com/jp3892/call_for_papers)
+    - [University of Pennsylvania CfP Website](https://call-for-papers.sas.upenn.edu/)
+
+**Copyright notice** I do not own any of the content extracted from the UPenn CfP Website. If you have any queries, or want something taken down, don't hesitate to contact me. This app is designed for research purposes. 
+
+Juan-Pablo Albornoz, Cornell University
+    
 """, unsafe_allow_html=True)

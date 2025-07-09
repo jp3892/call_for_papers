@@ -43,7 +43,11 @@ st.subheader("Views Over Time")
 line_chart = alt.Chart(views_over_time).mark_line(point=True).encode(
     x=alt.X("year_month:T", title="Month"),
     y=alt.Y("view_count", title="Total Views"),
-    tooltip=["year_month", "view_count"]
+    tooltip=[
+        alt.Tooltip("year_month:T", title="Month", format="%b %Y"),
+        alt.Tooltip("view_count", title="Total Views")
+    ]
+
 ).properties(width=800, height=300)
 
 st.altair_chart(line_chart, use_container_width=True)
@@ -52,13 +56,22 @@ st.altair_chart(line_chart, use_container_width=True)
 st.header("Top 25 Most Viewed CfPs")
 
 for _, row in top25.iterrows():
-    st.markdown(f"""
-    <div style="border:1px solid #ddd; border-radius:10px; padding:1rem; margin-bottom:1rem;">
-    <h4>{row['title']}</h4>
-    <p><strong>Date:</strong> {row['date']} | <strong>👁️ Views:</strong> {row['view_count']}</p>
-    <p><strong>Categories:</strong> {row['categories']}</p>
-    <p><strong>Organization(s):</strong> {row.get('universities') or row.get('associations')}</p>
-    <p><strong>ID:</strong> {row['unique_id']}</p>
-    <p style="margin-top:0.5rem;">{row['content'][:500]}{'...' if len(row['content']) > 500 else ''}</p>
-    </div>
-    """, unsafe_allow_html=True)
+    preview = row['content'][:400] + "..." if len(row['content']) > 300 else row['content']
+
+    with st.container():
+        st.markdown(f"""
+        <div style="border:1px solid #ddd; border-radius:10px; padding:1rem; margin-bottom:1rem;">
+        <h4>{row['title']}</h4>
+        <p><strong>Date:</strong> {row['date']} | <strong> Views:</strong> {row['view_count']}</p>
+        <p><strong>Categories:</strong> {row['categories']}</p>
+        <p><strong>URL:</strong> <a href="{row['url']}" target="_blank">{row['url']}</a></p>
+        <p><strong>Organization(s):</strong> {row.get('universities') or row.get('associations')}</p>
+        <p><strong>ID:</strong> {row['unique_id']}</p>
+        <p><strong>Preview:</strong> {preview}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        with st.expander("Show Full CfP Content"):
+            st.markdown(row['content'])
+
+

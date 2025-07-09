@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
+from folium.plugins import MarkerCluster
 
 # === Paths ===
 CFP_PATH = "data/cfps_map_subset.csv"
@@ -36,7 +37,7 @@ with st.sidebar:
 
 # === Create map ===
 m = folium.Map(location=[20, 0], zoom_start=2, tiles="cartodbpositron")
-
+marker_cluster = MarkerCluster().add_to(m)
 for _, row in locations_df.iterrows():
     location_name = row["location"]
     lat = row["lat"]
@@ -70,7 +71,13 @@ for _, row in locations_df.iterrows():
 
         iframe = folium.IFrame(html=html, width=300, height=200)
         popup = folium.Popup(iframe, max_width=300)
-        folium.Marker([lat, lon], popup=popup, tooltip=location_name).add_to(m)
+        folium.Marker(
+            [lat, lon],
+            popup=popup,
+            tooltip=location_name,
+            icon=folium.Icon(icon="fa-map-pin", prefix="fa", color="green")
+        ).add_to(marker_cluster)
+
 
 # === Show map ===
 st.subheader("Hover over a marker to explore CfPs")
