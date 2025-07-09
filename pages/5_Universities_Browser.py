@@ -84,13 +84,17 @@ View Count: `{int(row['view_count']) if pd.notnull(row['view_count']) else 'N/A'
 else:
     st.subheader("Overview")
 
-    # Explode universities if comma-separated lists
+    # Clean and explode by semicolon (not comma!)
     cfp_df["universities"] = cfp_df["universities"].astype(str)
-    exploded = cfp_df.assign(university=cfp_df["universities"].str.split(";")).explode("universities")
+    exploded = cfp_df.assign(university=cfp_df["universities"].str.split(";")).explode("university")
 
-    # Clean up individual university names (remove extra spaces)
+    # Clean up whitespace
     exploded["university"] = exploded["university"].str.strip()
 
+    # Drop any blank entries caused by bad separators
+    exploded = exploded[exploded["university"].notna() & (exploded["university"] != "")]
+
+    # Aggregate
     agg_df = (
         exploded.groupby("university")
         .agg(
@@ -99,9 +103,9 @@ else:
         )
         .sort_values("num_cfps", ascending=False)
         .reset_index()
-    )   
+    )
 
-
+    # Show results
     st.dataframe(agg_df, use_container_width=True)
-
     st.bar_chart(agg_df.set_index("university").head(20)["num_cfps"])
+
