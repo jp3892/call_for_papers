@@ -83,10 +83,21 @@ View Count: `{int(row['view_count']) if pd.notnull(row['view_count']) else 'N/A'
 # ------------------
 else:
     st.subheader("Overview")
+    # === Optional category filter ===
+    st.markdown("### Optional Filters")
+    all_categories = sorted(set(cat.strip() for cats in cfp_df["categories"].dropna() for cat in cats.split(",")))
+    selected_category = st.selectbox("Filter by Category:", ["All"] + all_categories)
+
+    # Filter the base DataFrame
+    filtered_df = cfp_df.copy()
+    if selected_category != "All":
+        filtered_df = filtered_df[filtered_df["categories"].fillna("").str.contains(fr"\b{re.escape(selected_category)}\b", case=False)]
+
 
     # Clean and explode by semicolon (not comma!)
     cfp_df["universities"] = cfp_df["universities"].astype(str)
-    exploded = cfp_df.assign(university=cfp_df["universities"].str.split(";")).explode("university")
+    exploded = filtered_df.assign(university=filtered_df["universities"].str.split(";")).explode("university")
+
 
     # Clean up whitespace
     exploded["university"] = exploded["university"].str.strip()
