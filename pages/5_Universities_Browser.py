@@ -94,6 +94,13 @@ else:
     # Drop any blank entries caused by bad separators
     exploded = exploded[exploded["university"].notna() & (exploded["university"] != "")]
 
+    # Remove junk: empty strings or literal "nan" values
+    exploded = exploded[
+        exploded["university"].notna() &
+        (exploded["university"].str.lower() != "nan") &
+        (exploded["university"] != "")
+    ]
+
     # Aggregate
     agg_df = (
         exploded.groupby("university")
