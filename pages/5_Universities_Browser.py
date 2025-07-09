@@ -25,12 +25,12 @@ view_option = st.radio("Choose how to explore:", ["By University", "University O
 # ------------------
 # Option 1: BY UNIVERSITY
 # ------------------
-# Normalize university names from comma-separated strings
+# Normalize university names from semi-colon-separated strings
 def extract_university_list(series):
     return (
         series.dropna()
         .astype(str)
-        .str.split(";")              # Split on commas
+        .str.split(";")              # Split on semi colon
         .explode()                   # Flatten lists
         .str.strip()                 # Remove extra whitespace
         .dropna()
@@ -86,17 +86,21 @@ else:
 
     # Explode universities if comma-separated lists
     cfp_df["universities"] = cfp_df["universities"].astype(str)
-    exploded = cfp_df.assign(university=cfp_df["universities"].str.split("; ")).explode("universities")
+    exploded = cfp_df.assign(university=cfp_df["universities"].str.split(";")).explode("universities")
+
+    # Clean up individual university names (remove extra spaces)
+    exploded["university"] = exploded["university"].str.strip()
 
     agg_df = (
-        exploded.groupby("universities")
+        exploded.groupby("university")
         .agg(
             num_cfps=("url", "count"),
             avg_views=("view_count", "mean")
         )
         .sort_values("num_cfps", ascending=False)
         .reset_index()
-    )
+    )   
+
 
     st.dataframe(agg_df, use_container_width=True)
 
