@@ -4,7 +4,6 @@ import numpy as np
 import os
 import re
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 
 # === Paths ===
 RQ_PATH = "data/research_questions_cleaned.csv"
@@ -14,29 +13,40 @@ EMBED_PATH = "data/rq_embeddings_final.npy"
 # === Load and filter research questions ===
 @st.cache_data
 def load_data():
-    # Read and clean
     df = pd.read_csv(RQ_PATH)
     df = df[df['unique_id'].str.match(r'\d{4}-\d{4}-\w+-\w+')].copy()
     df['research_questions'] = df['research_questions'].fillna("")
-    
-    # Merge with metadata
+
     cfp_df = pd.read_csv(CFP_PATH)
     df = pd.merge(df, cfp_df, on="unique_id", how="left")
     return df
 
 df = load_data()
 
-# === Load precomputed embeddings ===
+# === Load and normalize embeddings ===
 @st.cache_data
 def get_embeddings():
-    return np.load(EMBED_PATH)
+    emb = np.load(EMBED_PATH)
+    norms = np.linalg.norm(emb, axis=1, keepdims=True)
+    emb = emb / norms  # Normalize to unit vectors
+    return emb
 
 embeddings = get_embeddings()
+
+# Optional: Debug average norm
+# st.write(f"Average norm: {np.mean(np.linalg.norm(embeddings, axis=1)):.4f}")
 
 # === Consistency check ===
 if len(df) != len(embeddings):
     st.error(f"❌ Mismatch: {len(df)} entries vs {len(embeddings)} embeddings")
     st.stop()
+
+# === Load model ===
+@st.cache_resource
+def load_model():
+    return SentenceTransformer("all-MiniLM-L6-v2")
+
+model = load_model()
 
 # === Page setup ===
 st.set_page_config(page_title="Research Questions Collection", layout="wide")
@@ -71,9 +81,11 @@ with col2:
 
 # === Semantic Search or Browse ===
 if search_query:
-    model = SentenceTransformer("all-MiniLM-L6-v2")
     query_vec = model.encode([search_query])
-    sims = cosine_similarity(query_vec, embeddings)[0]
+    query_vec = query_vec / np.linalg.norm(query_vec, axis=1, keepdims=True)  # Normalize query
+
+    # Use fast dot product since all vectors are normalized
+    sims = np.dot(embeddings, query_vec[0])
 
     embedded_df = df.copy()
     embedded_df['similarity'] = sims
@@ -97,10 +109,17 @@ else:
 if sort_option == "Date":
     results = results.sort_values("date", ascending=False)
 
-# === Display results ===
+# === Display results with pagination ===
 st.markdown(f"### Showing {len(results)} results")
 
-for _, row in results.iterrows():
+PAGE_SIZE = 10
+max_page = max(1, (len(results) - 1) // PAGE_SIZE + 1)
+page = st.number_input("Page", min_value=1, max_value=max_page, step=1)
+
+start = (page - 1) * PAGE_SIZE
+end = start + PAGE_SIZE
+
+for _, row in results.iloc[start:end].iterrows():
     st.markdown(f"""
 **{row['research_questions']}**  
 {row['date']} | *View Count:* {row['view_count']}  
