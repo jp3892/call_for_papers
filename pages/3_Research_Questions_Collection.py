@@ -50,8 +50,16 @@ def get_embeddings(questions):
     np.save(EMBED_PATH, embeddings)
     return embeddings
 
-embedded_df = df[df['research_questions'].str.strip() != ""].reset_index(drop=True)
-embeddings = get_embeddings(embedded_df['research_questions'].tolist())
+embedded_df = df[df['research_questions'].apply(lambda x: isinstance(x, str) and x.strip() != "")].copy()
+embedded_df.reset_index(drop=True, inplace=True)
+
+# Double-check list length before encoding
+questions_list = embedded_df['research_questions'].tolist()
+print(f"Encoding {len(questions_list)} research questions...")
+
+embeddings = get_embeddings(questions_list)
+print(f"Got {len(embeddings)} embeddings")
+
 
 
 # === Page Title and Intro ===
