@@ -6,7 +6,7 @@ st.set_page_config(page_title="Journal Explorer", layout="wide")
 st.title("Journal Explorer")
 st.markdown(f"**under development**")
 # === Load data ===
-def save_for_later:
+def save_for_later():
     @st.cache_data
 
     def load_data():

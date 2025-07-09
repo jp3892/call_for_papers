@@ -2,13 +2,14 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+import re
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # === Paths ===
-RQ_PATH = "data/research_questions_output_test.csv"
+RQ_PATH = "data/research_questions_cleaned.csv"
 CFP_PATH = "data/cfps_map_subset.csv"
-EMBED_PATH = "data/rq_embeddings.npy"
+EMBED_PATH = "data/rq_embeddings_3.npy"
 
 # === Load Model and Cache ===
 @st.cache_resource
@@ -16,14 +17,28 @@ def load_model():
     return SentenceTransformer("all-MiniLM-L6-v2")
 
 @st.cache_data
+
+
+def load_data_cleaned(path):
+    valid_rows = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            parts = line.strip().split(",", maxsplit=1)
+            if len(parts) == 2 and re.match(r"\d{4}-\d{4}-\w+-\w+", parts[0]):
+                valid_rows.append(parts)
+    return pd.DataFrame(valid_rows[1:], columns=["unique_id", "research_questions"])
+
+@st.cache_data
 def load_data():
-    rq_df = pd.read_csv(RQ_PATH)
+    rq_df = load_data_cleaned(RQ_PATH)
     cfp_df = pd.read_csv(CFP_PATH)
     df = pd.merge(rq_df, cfp_df, on="unique_id", how="left")
     df['research_questions'] = df['research_questions'].fillna("")
     return df
 
 df = load_data()
+
+
 
 # === Load or Generate Embeddings ===
 @st.cache_data
@@ -35,7 +50,9 @@ def get_embeddings(questions):
     np.save(EMBED_PATH, embeddings)
     return embeddings
 
-embeddings = get_embeddings(df['research_questions'].tolist())
+embedded_df = df[df['research_questions'].str.strip() != ""].reset_index(drop=True)
+embeddings = get_embeddings(embedded_df['research_questions'].tolist())
+
 
 # === Page Title and Intro ===
 st.set_page_config(page_title="Research Questions Collection", layout="wide")
@@ -74,10 +91,16 @@ if search_query:
     model = load_model()
     query_vec = model.encode([search_query])
     sims = cosine_similarity(query_vec, embeddings)[0]
-    df['similarity'] = sims
-    results = df.sort_values("similarity", ascending=False).copy()
+    
+    # Create a copy of the embedded_df to avoid modifying cached df
+    embedded_df = embedded_df.copy()
+    embedded_df['similarity'] = sims
+
+    results = embedded_df.sort_values("similarity", ascending=False)
 else:
     results = df.copy()
+    ...
+
     if selected_categories:
         results = results[results['categories'].apply(
             lambda x: any(cat.strip() in x.split(',') for cat in selected_categories) if pd.notna(x) else False)]
