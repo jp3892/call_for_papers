@@ -28,7 +28,7 @@ with st.sidebar:
     selected_category = st.selectbox("Filter by Category (optional):", ["All"] + categories)
 
     universities = sorted(
-    set(uni.strip() for unis in cfp_df["universities"].fillna("") for uni in unis.split(","))
+    set(uni.strip() for unis in cfp_df["universities"].fillna("") for uni in unis.split(";"))
     )
 
     selected_university = st.selectbox("Filter by University (optional):", ["All"] + universities)
