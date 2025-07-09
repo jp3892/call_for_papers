@@ -86,7 +86,7 @@ else:
 
     # Explode universities if comma-separated lists
     cfp_df["universities"] = cfp_df["universities"].astype(str)
-    exploded = cfp_df.assign(university=cfp_df["universities"].str.split(", ")).explode("universities")
+    exploded = cfp_df.assign(university=cfp_df["universities"].str.split("; ")).explode("universities")
 
     agg_df = (
         exploded.groupby("universities")
