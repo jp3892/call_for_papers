@@ -74,10 +74,18 @@ if search_query:
     model = SentenceTransformer("all-MiniLM-L6-v2")
     query_vec = model.encode([search_query])
     sims = cosine_similarity(query_vec, embeddings)[0]
-    
+
     embedded_df = df.copy()
     embedded_df['similarity'] = sims
-    results = embedded_df.sort_values("similarity", ascending=False)
+
+    # Filter based on similarity threshold
+    if sort_option == "Similarity":
+        results = embedded_df[embedded_df['similarity'] >= 0.20]
+        results = results.sort_values("similarity", ascending=False)
+    else:  # sort_option == "Date"
+        results = embedded_df[embedded_df['similarity'] >= 0.30]
+        results = results.sort_values("date", ascending=False)
+
 else:
     results = df.copy()
     if selected_categories:
