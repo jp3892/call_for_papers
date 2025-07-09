@@ -3,7 +3,7 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 import re
-
+import altair as alt
 st.set_page_config(layout="wide")
 st.title("University Explorer")
 
@@ -114,5 +114,18 @@ else:
 
     # Show results
     st.dataframe(agg_df, use_container_width=True)
-    st.bar_chart(agg_df.set_index("university").head(20)["num_cfps"])
+
+
+    # Take top 20 universities by CfP count
+    top20 = agg_df.sort_values("num_cfps", ascending=False).head(20)
+
+    # Create horizontal bar chart with descending order and varying color
+    bar_chart = alt.Chart(top20).mark_bar().encode(
+        x=alt.X("num_cfps:Q", title="Number of CfPs"),
+        y=alt.Y("university:N", sort='-x', title="University"),
+        color=alt.Color("num_cfps:Q", scale=alt.Scale(scheme="blues"), legend=None),
+        tooltip=["university", "num_cfps", "avg_views"]
+    ).properties(width=700, height=500)
+
+    st.altair_chart(bar_chart, use_container_width=True)
 
