@@ -42,13 +42,26 @@ df = load_data()
 
 # === Load or Generate Embeddings ===
 @st.cache_data
+@st.cache_data
 def get_embeddings(questions):
     if os.path.exists(EMBED_PATH):
-        return np.load(EMBED_PATH)
-    model = load_model()
-    embeddings = model.encode(questions, show_progress_bar=True)
-    np.save(EMBED_PATH, embeddings)
+        embeddings = np.load(EMBED_PATH)
+    else:
+        model = load_model()
+        embeddings = model.encode(questions, show_progress_bar=True)
+        
+        # Fix: drop extra embeddings if needed
+        if len(embeddings) > len(questions):
+            st.warning(f"⚠️ Truncating {len(embeddings) - len(questions)} extra embedding(s)")
+            embeddings = embeddings[:len(questions)]
+        elif len(embeddings) < len(questions):
+            raise ValueError("Fewer embeddings than questions – something's wrong.")
+        
+        np.save(EMBED_PATH, embeddings)
+
     return embeddings
+
+
 
 embedded_df = df[df['research_questions'].apply(lambda x: isinstance(x, str) and x.strip() != "")].copy()
 embedded_df.reset_index(drop=True, inplace=True)
@@ -56,10 +69,23 @@ embedded_df.reset_index(drop=True, inplace=True)
 # Double-check list length before encoding
 questions_list = embedded_df['research_questions'].tolist()
 print(f"Encoding {len(questions_list)} research questions...")
+embedded_df = df[df['research_questions'].apply(lambda x: isinstance(x, str) and x.strip() != "")].copy()
+embedded_df.reset_index(drop=True, inplace=True)
+
+# Remove accidental \n that might split text unexpectedly
+embedded_df['research_questions'] = embedded_df['research_questions'].str.replace(r"[\r\n]+", " ", regex=True)
+
+questions_list = embedded_df['research_questions'].tolist()
+print(f"Embedding {len(questions_list)} questions...")
 
 embeddings = get_embeddings(questions_list)
 print(f"Got {len(embeddings)} embeddings")
 
+for i, q in enumerate(questions_list):
+    if not isinstance(q, str):
+        print(f"❌ Not a string at index {i}: {repr(q)}")
+    elif '\n' in q:
+        print(f"⚠️ Newline at index {i}: {repr(q)}")
 
 
 # === Page Title and Intro ===
