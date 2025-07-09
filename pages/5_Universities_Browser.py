@@ -104,4 +104,4 @@ else:
 
     st.dataframe(agg_df, use_container_width=True)
 
-    st.bar_chart(agg_df.set_index("universities").head(20)["num_cfps"])
+    st.bar_chart(agg_df.set_index("university").head(20)["num_cfps"])
