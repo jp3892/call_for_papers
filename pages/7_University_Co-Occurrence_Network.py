@@ -81,7 +81,7 @@ for unis in df["universities"].fillna("").str.split(";"):
             G[u1][u2]["weight"] += 1
         else:
             G.add_edge(u1, u2, weight=1)
-
+original_edges = list(G.edges(data=True))
 # === Filter edges by co-occurrence threshold ===
 edges_to_remove = [(u, v) for u, v, d in G.edges(data=True) if d["weight"] < min_cooccurrence]
 G.remove_edges_from(edges_to_remove)
@@ -90,8 +90,7 @@ G.remove_nodes_from(list(nx.isolates(G)))
 # === Apply University Filter ===
 if selected_university != "All" and selected_university in G.nodes:
     neighbors = list(G.neighbors(selected_university))
-    G = nx.Graph()
-    original_edges = list(G.edges(data=True)) 
+    G = nx.Graph() 
     for neighbor in neighbors:
         weight = next(
             (d["weight"] for u, v, d in original_edges if 
