@@ -7,50 +7,108 @@ st.title("Journal Explorer")
 
 
 # Load cleaned data
-df = pd.read_csv("data/journals_clean.csv")
+df = pd.read_csv("data/journals_clean2.csv")
 main_df = pd.read_csv("data/cfps_map_subset.csv")
 
-# Merge to bring in dates and categories
-merged = df.merge(main_df[["unique_id", "date", "categories"]], on="unique_id", how="left")
-merged["year"] = pd.to_datetime(merged["date"], errors="coerce").dt.year
+@st.cache_data
+def load_data():
+    df = pd.read_csv("data/journals_clean2.csv")
+    main_df = pd.read_csv("data/cfps_map_subset.csv")
 
-# === General Info ===
-st.subheader("General Information")
-st.write(f"Unique journals: {df['journal_name'].nunique():,}")
-st.write("Top contributing journals:")
-st.write(df["journal_name"].value_counts().head(10))
+    # Merge to bring in dates and categories
+    merged = df.merge(main_df[["unique_id", "date", "categories", "title", "url"]], on="unique_id", how="left")
+    merged["year"] = pd.to_datetime(merged["date"], errors="coerce").dt.year
 
-# === Contributions over time ===
-st.subheader("Journal Contributions Over Time")
-journal_year_counts = merged.groupby(["year", "journal_name"]).size().reset_index(name="count")
-st.line_chart(journal_year_counts.pivot(index="year", columns="journal_name", values="count").fillna(0))
 
-# === Search & Browsing ===
-st.subheader("Explore Journals")
+merged, main_df = load_data()
 
-# Journal dropdown
-journal_options = ["All"] + sorted(df["journal_name"].unique())
-selected_journal = st.selectbox("Select a Journal", journal_options)
+# ========================
+# 1. Top Contributing Journals
+# ========================
+st.header("Top Contributing Journals")
 
-# Topics dropdown
-topics = set()
-df["key_topics"].dropna().apply(lambda x: topics.update([t.strip() for t in x.split(",")]))
-topic_options = ["All"] + sorted(topics)
-selected_topic = st.selectbox("Select a Topic", topic_options)
+journal_counts = (
+    merged["journal_name"]
+    .value_counts()
+    .reset_index()
+    .rename(columns={"index": "journal_name", "journal_name": "count"})
+)
 
-# Categories dropdown
-categories = set()
-merged["categories"].dropna().apply(lambda x: categories.update([c.strip() for c in x.split(",")]))
-category_options = ["All"] + sorted(categories)
-selected_category = st.selectbox("Select a Category", category_options)
+show_all = st.checkbox("Show all journals with ≥5 contributions", value=False)
 
-# Apply filters
-filtered = merged.copy()
-if selected_journal != "All":
-    filtered = filtered[filtered["journal_name"] == selected_journal]
-if selected_topic != "All":
-    filtered = filtered[filtered["key_topics"].str.contains(selected_topic, na=False)]
-if selected_category != "All":
-    filtered = filtered[filtered["categories"].str.contains(selected_category, na=False)]
+if show_all:
+    top_journals = journal_counts[journal_counts["count"] >= 5]
+else:
+    top_journals = journal_counts.head(10)
 
-st.write(filtered)
+for _, row in top_journals.iterrows():
+    journal = row["journal_name"]
+    count = row["count"]
+    journal_url = f"/Journals_Detail?journal={journal.replace(' ', '%20')}"
+    st.markdown(f"- [{journal} ({count})]({journal_url})")
+
+# ========================
+# 2. Journal Contributions Over Time
+# ========================
+st.header("Journal Contributions Over Time")
+
+if "year" in merged.columns and merged["year"].notna().any():
+    yearly_total = merged.groupby("year").size().reset_index(name="total_journal_cfps")
+
+    all_cfps = main_df.copy()
+    all_cfps["year"] = pd.to_datetime(all_cfps["date"], errors="coerce").dt.year
+    yearly_all = all_cfps.groupby("year").size().reset_index(name="total_all_cfps")
+
+    merged_counts = pd.merge(yearly_all, yearly_total, on="year", how="left").fillna(0)
+
+    fig = px.line(
+        merged_counts,
+        x="year",
+        y=["total_all_cfps", "total_journal_cfps"],
+        labels={"value": "Number of CfPs", "year": "Year", "variable": "Type"},
+        title="CfPs Over Time (All vs. Journal Submissions)",
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+# ========================
+# 3. Explore Journals
+# ========================
+st.header("Explore Journals")
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    search_query = st.text_input("Search journal name")
+
+with col2:
+    year_filter = st.selectbox("Filter by year", options=["All"] + sorted(merged["year"].dropna().unique().tolist()))
+
+with col3:
+    category_filter = st.selectbox(
+        "Filter by category",
+        options=["All"] + sorted(set(cat for cats in merged["categories"].dropna().str.split(",") for cat in cats)),
+    )
+
+with col4:
+    special_only = st.checkbox("Show only special issues")
+
+filtered_df = merged.copy()
+
+if search_query:
+    filtered_df = filtered_df[filtered_df["journal_name"].str.contains(search_query, case=False, na=False)]
+
+if year_filter != "All":
+    filtered_df = filtered_df[filtered_df["year"] == year_filter]
+
+if category_filter != "All":
+    filtered_df = filtered_df[filtered_df["categories"].fillna("").str.contains(category_filter, case=False)]
+
+if special_only:
+    filtered_df = filtered_df[filtered_df["special_issue"] == True]
+
+st.dataframe(
+    filtered_df[["journal_name", "title", "url", "year", "categories", "special_issue"]].sort_values(
+        by="year", ascending=False
+    ),
+    use_container_width=True,
+)
