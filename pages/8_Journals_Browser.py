@@ -1,39 +1,68 @@
 import streamlit as st
 import pandas as pd
 import re
+import plotly.express as px
 
 st.set_page_config(page_title="Journal Explorer", layout="wide")
 st.title("Journal Explorer")
 
 
 # Load cleaned data
-df = pd.read_csv("data/journals_clean2.csv")
+df = pd.read_csv("data/journals_clean_2.csv")
 main_df = pd.read_csv("data/cfps_map_subset.csv")
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("data/journals_clean2.csv")
+    df = pd.read_csv("data/journals_clean_2.csv")
     main_df = pd.read_csv("data/cfps_map_subset.csv")
 
     # Merge to bring in dates and categories
     merged = df.merge(main_df[["unique_id", "date", "categories", "title", "url"]], on="unique_id", how="left")
     merged["year"] = pd.to_datetime(merged["date"], errors="coerce").dt.year
-
+    return merged, main_df
 
 merged, main_df = load_data()
+
 
 # ========================
 # 1. Top Contributing Journals
 # ========================
 st.header("Top Contributing Journals")
 
+# Category filter
+all_categories = (
+    merged["categories"]
+    .dropna()
+    .str.split(",")
+    .explode()
+    .str.strip()
+    .unique()
+)
+selected_cats = st.multiselect("Filter by Category", sorted(all_categories))
+
+filtered = merged.copy()
+if selected_cats:
+    filtered = filtered[
+        filtered["categories"].apply(
+            lambda x: any(cat in str(x) for cat in selected_cats)
+        )
+    ]
+
+# Journal counts
 journal_counts = (
-    merged["journal_name"]
+    filtered["journal_name"]
     .value_counts()
     .reset_index()
-    .rename(columns={"index": "journal_name", "journal_name": "count"})
 )
+journal_counts.columns = ["journal_name", "count"]
 
+
+# Ensure count is numeric
+journal_counts["count"] = pd.to_numeric(journal_counts["count"], errors="coerce")
+journal_counts = journal_counts.dropna(subset=["count"])
+journal_counts["count"] = journal_counts["count"].astype(int)
+
+# Show toggle
 show_all = st.checkbox("Show all journals with ≥5 contributions", value=False)
 
 if show_all:
@@ -41,11 +70,14 @@ if show_all:
 else:
     top_journals = journal_counts.head(10)
 
+# Buttons for navigation
 for _, row in top_journals.iterrows():
     journal = row["journal_name"]
     count = row["count"]
-    journal_url = f"/Journals_Detail?journal={journal.replace(' ', '%20')}"
-    st.markdown(f"- [{journal} ({count})]({journal_url})")
+
+    if st.button(f"{journal} ({count})", key=journal):
+        st.session_state["selected_journal"] = journal
+        st.switch_page("pages/9_Journal_Details.py")
 
 # ========================
 # 2. Journal Contributions Over Time
