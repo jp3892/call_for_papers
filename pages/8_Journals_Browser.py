@@ -4,52 +4,53 @@ import re
 
 st.set_page_config(page_title="Journal Explorer", layout="wide")
 st.title("Journal Explorer")
-st.markdown(f"**under development**")
-# === Load data ===
-def save_for_later():
-    @st.cache_data
 
-    def load_data():
-        df = pd.read_csv("data/cfps_journals_subset.csv")
-        df["date"] = pd.to_datetime(df["date"], errors="coerce")
-        df = df.dropna(subset=["date"])
-        df["journals"] = df["journals"].fillna("").astype(str).str.split(";")
-        return df
 
-    cfp_df = load_data()
+# Load cleaned data
+df = pd.read_csv("data/journals_clean.csv")
+main_df = pd.read_csv("data/cfps_map_subset.csv")
 
-    # === Journal count bar chart ===
-    all_journals = cfp_df.explode("journals")
-    journal_counts = all_journals["journals"].value_counts().drop("", errors="ignore")
-    top_n = st.slider("Show top N journals by CfP count:", min_value=5, max_value=50, value=20)
+# Merge to bring in dates and categories
+merged = df.merge(main_df[["unique_id", "date", "categories"]], on="unique_id", how="left")
+merged["year"] = pd.to_datetime(merged["date"], errors="coerce").dt.year
 
-    st.bar_chart(journal_counts.head(top_n))
+# === General Info ===
+st.subheader("General Information")
+st.write(f"Unique journals: {df['journal_name'].nunique():,}")
+st.write("Top contributing journals:")
+st.write(df["journal_name"].value_counts().head(10))
 
-    # === Journal search ===
-    unique_journals = sorted(set(j for sub in cfp_df["journals"] for j in sub if j.strip()))
-    selected_journal = st.selectbox("Search for a journal:", options=unique_journals)
+# === Contributions over time ===
+st.subheader("Journal Contributions Over Time")
+journal_year_counts = merged.groupby(["year", "journal_name"]).size().reset_index(name="count")
+st.line_chart(journal_year_counts.pivot(index="year", columns="journal_name", values="count").fillna(0))
 
-    if selected_journal:
-        st.markdown(f"### CfPs linked to: *{selected_journal}*")
+# === Search & Browsing ===
+st.subheader("Explore Journals")
 
-        filtered_df = cfp_df[cfp_df["journals"].apply(lambda js: any(re.fullmatch(re.escape(selected_journal), j.strip(), flags=re.I) for j in js))].copy()
+# Journal dropdown
+journal_options = ["All"] + sorted(df["journal_name"].unique())
+selected_journal = st.selectbox("Select a Journal", journal_options)
 
-        # Optional filters
-        with st.expander("Optional Filters"):
-            date_range = st.date_input("Filter by Date Range:", [])
-            if date_range and len(date_range) == 2:
-                filtered_df = filtered_df[filtered_df["date"].between(date_range[0], date_range[1])]
+# Topics dropdown
+topics = set()
+df["key_topics"].dropna().apply(lambda x: topics.update([t.strip() for t in x.split(",")]))
+topic_options = ["All"] + sorted(topics)
+selected_topic = st.selectbox("Select a Topic", topic_options)
 
-            selected_cat = st.multiselect("Filter by Category:", options=sorted(cfp_df["categories"].dropna().explode().unique()))
-            if selected_cat:
-                filtered_df = filtered_df[filtered_df["categories"].apply(lambda x: any(cat in str(x) for cat in selected_cat))]
+# Categories dropdown
+categories = set()
+merged["categories"].dropna().apply(lambda x: categories.update([c.strip() for c in x.split(",")]))
+category_options = ["All"] + sorted(categories)
+selected_category = st.selectbox("Select a Category", category_options)
 
-        st.markdown(f"### Showing {len(filtered_df)} results")
-        for _, row in filtered_df.iterrows():
-            st.markdown(f"""
-            **[{row['title']}]({row['url']})**  
-            Date: {row['date'].date() if pd.notnull(row['date']) else 'Unknown'}  
-            Categories: `{row['categories']}`  
-            View Count: `{int(row['view_count']) if pd.notnull(row['view_count']) else 'N/A'}`
-            ---
-            """)
+# Apply filters
+filtered = merged.copy()
+if selected_journal != "All":
+    filtered = filtered[filtered["journal_name"] == selected_journal]
+if selected_topic != "All":
+    filtered = filtered[filtered["key_topics"].str.contains(selected_topic, na=False)]
+if selected_category != "All":
+    filtered = filtered[filtered["categories"].str.contains(selected_category, na=False)]
+
+st.write(filtered)
