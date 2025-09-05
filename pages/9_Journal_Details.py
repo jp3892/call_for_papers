@@ -20,7 +20,7 @@ merged = load_data()
 
 # === Check session_state ===
 if "selected_journal" not in st.session_state:
-    st.error("No journal selected. Please go back to the browser page.")
+    st.error("No journal selected. Please select one in the Journals Browser page.")
     st.stop()
 
 journal_name = st.session_state["selected_journal"]

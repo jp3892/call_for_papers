@@ -102,6 +102,8 @@ if "year" in merged.columns and merged["year"].notna().any():
     )
     st.plotly_chart(fig, use_container_width=True)
 
+
+
 # ========================
 # 3. Explore Journals
 # ========================
@@ -113,7 +115,10 @@ with col1:
     search_query = st.text_input("Search journal name")
 
 with col2:
-    year_filter = st.selectbox("Filter by year", options=["All"] + sorted(merged["year"].dropna().unique().tolist()))
+    year_filter = st.selectbox(
+        "Filter by year",
+        options=["All"] + sorted(merged["year"].dropna().unique().tolist())
+    )
 
 with col3:
     category_filter = st.selectbox(
@@ -138,9 +143,26 @@ if category_filter != "All":
 if special_only:
     filtered_df = filtered_df[filtered_df["special_issue"] == True]
 
-st.dataframe(
-    filtered_df[["journal_name", "title", "url", "year", "categories", "special_issue"]].sort_values(
-        by="year", ascending=False
-    ),
-    use_container_width=True,
-)
+import html
+# Limit initial view to 20 rows if no filters are active
+filters_active = search_query or year_filter != "All" or category_filter != "All" or special_only
+if not filters_active:
+    filtered_df = filtered_df.head(20)
+
+# Prepare dataframe for display
+display_df = filtered_df[
+    ["journal_name", "title", "url", "year", "categories", "special_issue"]
+].sort_values(by="year", ascending=False).copy()
+
+# Clean URLs and make them clickable
+def make_clickable(url):
+    if pd.notna(url) and isinstance(url, str) and url.strip() != "":
+        safe_url = html.escape(url.strip())   # escape unsafe characters
+        return f'<a href="{safe_url}" target="_blank">link</a>'
+    return ""
+
+display_df["url"] = display_df["url"].apply(make_clickable)
+
+# Render table with safe HTML
+st.write(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+
