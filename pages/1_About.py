@@ -32,7 +32,7 @@ ja827@cornell.edu
 - The whole team and cohort at the [Summer Graduate Fellowship in Digital Humanities at Cornell University](https://www.library.cornell.edu/about/staff/central-departments/digital-scholarship/colab-programs/summer-dh/)
 - Lindsay Thomas, Cornell University
 - [Journal of Open Humanities Data](https://openhumanitiesdata.metajnl.com/)
-- The folks at the [University of Pennsylvania CfP Website](https://call-for-papers.sas.upenn.edu/)
+- Brian Kirk from the [University of Pennsylvania CfP Website](https://call-for-papers.sas.upenn.edu/)
 
 
 
@@ -75,9 +75,9 @@ I used ChatGpT and Copilot to help correct and write some of the code used in th
 ### Universities
 - This page simply aggregates the CfP counts for individual unviersity and allows any researcher to browse CfPs by university.
 ### Journals
-- Extracting journal information from the CfP database was a half-success, as Regex and NER produced many false positives and negatives. The best experiment resulted from using [Open Alex's API](https://openalex.org/) to source journal names. This limitation must be taken into account. 
-### Associations
-- This page allows the user to browse CfPs by Association (e.g. MLA)
+- I used Gemini's Flash 2.0 LLM to extract the journal names from CfPs that called for journal submissions. Some false positives may be present.
+### Journal Details
+- This page allows the user to browse CfPs by specific journals -- must be previously selected
 ### Network
 - I used [Pyvis](https://pyvis.readthedocs.io/en/latest/) to create an interactive ntewrok visualization.
 - Each node is a university and the edges represent the number of call-for-papers in which they are associated. For a better experience, I recommend filtering by category, university, or using a high co-ocurrence number.
